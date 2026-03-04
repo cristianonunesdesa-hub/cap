@@ -1,7 +1,13 @@
 {
+  "crons": [
+    {
+      "path": "/api/whatsapp/reminders",
+      "schedule": "0 12 * * *"
+    }
+  ],
   "rewrites": [
     {
-      "source": "/((?!.*\\..*).*)",
+      "source": "/((?!api/)(?!.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
