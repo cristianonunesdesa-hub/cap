@@ -6,11 +6,12 @@ import { Lock, Shield, Eye, EyeOff, Check, AlertTriangle } from './Icons';
 interface LoginScreenProps {
     onLogin: (data: Customer[], password: string) => void;
     isFirstAccess: boolean;
+    supabaseConfigured: boolean;
 }
 
 type ScreenState = 'login' | 'register';
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, supabaseConfigured }) => {
     const [screenState, setScreenState] = useState<ScreenState>('login');
 
     // Inputs
@@ -28,6 +29,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         e.preventDefault();
         setError('');
         setMessage('');
+        if (!supabaseConfigured || !supabase) {
+            setError('Configuração ausente na Vercel: defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+            return;
+        }
         setLoading(true);
 
         try {
@@ -53,6 +58,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         e.preventDefault();
         setError('');
         setMessage('');
+        if (!supabaseConfigured || !supabase) {
+            setError('Configuração ausente na Vercel: defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+            return;
+        }
 
         if (password.length < 6) {
             setError('A senha deve ter pelo menos 6 caracteres.');
@@ -103,6 +112,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 </p>
 
                 <form onSubmit={screenState === 'login' ? handleLogin : handleRegister}>
+                    {!supabaseConfigured && (
+                        <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-md flex items-center">
+                            <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
+                            Projeto sem variáveis de ambiente do Supabase na Vercel.
+                        </div>
+                    )}
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>

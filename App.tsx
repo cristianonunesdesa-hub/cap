@@ -8,7 +8,7 @@ import LoginScreen from './components/LoginScreen';
 import { Customer, TabView, PortfolioStatus } from './types';
 import { getCustomerStatus, getTodayISO } from './utils/dateUtils';
 import { hasSecuritySetup } from './utils/security';
-import { supabase, db } from './services/supabase';
+import { supabase, db, isSupabaseConfigured } from './services/supabase';
 
 // Seed data to show initially if empty (Only used if no existing data found at all)
 const INITIAL_DATA: Customer[] = [
@@ -39,6 +39,11 @@ export default function App() {
   // Check if security is set up on mount and listen for Supabase Auth
   useEffect(() => {
     setHasSetup(hasSecuritySetup());
+    if (!isSupabaseConfigured || !supabase) {
+      setIsAuthenticated(false);
+      setCustomers([]);
+      return;
+    }
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -81,6 +86,11 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if (!supabase) {
+      setIsAuthenticated(false);
+      setCustomers([]);
+      return;
+    }
     try {
       await supabase.auth.signOut();
       setIsAuthenticated(false);
@@ -214,7 +224,13 @@ export default function App() {
 
   // --- RENDER LOGIN SCREEN IF NOT AUTHENTICATED ---
   if (!isAuthenticated) {
-    return <LoginScreen onLogin={handleLoginSuccess} isFirstAccess={!hasSetup} />;
+    return (
+      <LoginScreen
+        onLogin={handleLoginSuccess}
+        isFirstAccess={!hasSetup}
+        supabaseConfigured={isSupabaseConfigured}
+      />
+    );
   }
 
   // --- MAIN APP ---

@@ -4,17 +4,28 @@ import { Customer } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!isSupabaseConfigured) {
   console.warn('Supabase credentials missing. Authentication will not work.');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string)
+  : null;
+
+const getSupabaseClient = () => {
+  if (!supabase) {
+    throw new Error('Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+  }
+  return supabase;
+};
 
 // Database Helpers
 export const db = {
   async getCustomers() {
-    const { data, error } = await supabase
+    const client = getSupabaseClient();
+    const { data, error } = await client
       .from('customers')
       .select('*')
       .order('last_purchase_date', { ascending: true });
@@ -24,7 +35,8 @@ export const db = {
   },
 
   async saveCustomer(customer: Omit<Customer, 'id'> | Customer) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const client = getSupabaseClient();
+    const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const customerData: any = {
@@ -43,7 +55,7 @@ export const db = {
       customerData.id = customer.id;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('customers')
       .upsert(customerData)
       .select()
@@ -57,7 +69,8 @@ export const db = {
   },
 
   async deleteCustomer(id: string) {
-    const { error } = await supabase
+    const client = getSupabaseClient();
+    const { error } = await client
       .from('customers')
       .delete()
       .eq('id', id);
