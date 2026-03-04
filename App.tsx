@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Users, AlertTriangle, Archive, Plus, Check, Calendar, Settings, LogOut } from './components/Icons';
+import { Users, AlertTriangle, Archive, Plus, Check, Calendar, Settings, LogOut, MessageCircle } from './components/Icons';
 import CustomerList from './components/CustomerList';
 import CustomerModal from './components/AddCustomerModal';
 import GenerateMessageModal from './components/GenerateMessageModal';
 import ApiKeyModal from './components/ApiKeyModal';
+import WhatsAppConnectionModal from './components/WhatsAppConnectionModal';
 import LoginScreen from './components/LoginScreen';
 import { Customer, TabView, PortfolioStatus } from './types';
 import { getCustomerStatus, getTodayISO } from './utils/dateUtils';
@@ -29,6 +30,7 @@ export default function App() {
   // Modal States
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [selectedCustomerForMessage, setSelectedCustomerForMessage] = useState<Customer | null>(null);
 
@@ -237,6 +239,9 @@ export default function App() {
               </div>
 
               <div className="flex gap-2 lg:hidden">
+                <button onClick={() => setIsWhatsAppModalOpen(true)} className="p-2 text-green-600 hover:bg-green-50 rounded-full" title="Conexao WhatsApp">
+                  <MessageCircle className="w-5 h-5" />
+                </button>
                 <button onClick={() => setIsApiKeyModalOpen(true)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" title="Configurações">
                   <Settings className="w-5 h-5" />
                 </button>
@@ -264,6 +269,15 @@ export default function App() {
 
             {/* Desktop Actions */}
             <div className="flex gap-2 w-full lg:w-auto">
+              <button
+                onClick={() => setIsWhatsAppModalOpen(true)}
+                className="hidden lg:flex items-center justify-center px-3 py-2 text-green-600 hover:bg-green-50 rounded-md transition-colors gap-2"
+                title="Conectar WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">WhatsApp</span>
+              </button>
+
               <button
                 onClick={() => setIsApiKeyModalOpen(true)}
                 className="hidden lg:flex items-center justify-center px-3 py-2 text-gray-500 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
@@ -419,6 +433,11 @@ export default function App() {
       <ApiKeyModal
         isOpen={isApiKeyModalOpen}
         onClose={() => setIsApiKeyModalOpen(false)}
+      />
+
+      <WhatsAppConnectionModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
       />
     </div>
   );
