@@ -1,0 +1,5 @@
+{
+  "name": "Gestão de Carteira Atacado",
+  "description": "Sistema de CRM para vendedores de atacado com lógica de retenção de 75 dias e geração de mensagens via IA.",
+  "requestFramePermissions": []
+}
