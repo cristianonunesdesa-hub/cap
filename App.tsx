@@ -10,54 +10,6 @@ import { getCustomerStatus, getTodayISO } from './utils/dateUtils';
 import { hasSecuritySetup } from './utils/security';
 import { supabase, db, isSupabaseConfigured } from './services/supabase';
 
-const toISODate = (daysAgo: number): string => {
-  return new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-};
-
-// Seed data to show initially if empty (Only used if no existing data found at all)
-const INITIAL_DATA: Customer[] = [
-  ...Array.from({ length: 12 }, (_, i) => ({
-    id: `active-${i + 1}`,
-    name: `Cliente Ativo ${i + 1}`,
-    companyName: `Empresa Ativa ${i + 1}`,
-    phone: `(11) 98${String(1000 + i).padStart(4, '0')}-${String(2000 + i).padStart(4, '0')}`,
-    cnpj: `1000000000${String(i + 1).padStart(4, '0')}`,
-    lastPurchaseDate: toISODate(8 + i * 3), // 8..41 dias (ativo)
-    ownerType: 'me' as const,
-    retentionLimit: 75
-  })),
-  ...Array.from({ length: 11 }, (_, i) => ({
-    id: `risk-${i + 1}`,
-    name: `Cliente Risco ${i + 1}`,
-    companyName: `Empresa Risco ${i + 1}`,
-    phone: `(21) 97${String(3000 + i).padStart(4, '0')}-${String(4000 + i).padStart(4, '0')}`,
-    cnpj: `2000000000${String(i + 1).padStart(4, '0')}`,
-    lastPurchaseDate: toISODate(61 + i), // 61..71 dias (em risco)
-    ownerType: 'me' as const,
-    retentionLimit: 75
-  })),
-  ...Array.from({ length: 8 }, (_, i) => ({
-    id: `prospecting-${i + 1}`,
-    name: `Cliente Prospecção ${i + 1}`,
-    companyName: `Empresa Prospecção ${i + 1}`,
-    phone: `(31) 96${String(5000 + i).padStart(4, '0')}-${String(6000 + i).padStart(4, '0')}`,
-    cnpj: `3000000000${String(i + 1).padStart(4, '0')}`,
-    lastPurchaseDate: toISODate(76 + i * 2), // 76..90 dias (prospecção)
-    ownerType: 'me' as const,
-    retentionLimit: 75
-  })),
-  ...Array.from({ length: 4 }, (_, i) => ({
-    id: `monitoring-${i + 1}`,
-    name: `Cliente Acompanhamento ${i + 1}`,
-    companyName: `Empresa Acompanhamento ${i + 1}`,
-    phone: `(41) 95${String(7000 + i).padStart(4, '0')}-${String(8000 + i).padStart(4, '0')}`,
-    cnpj: `4000000000${String(i + 1).padStart(4, '0')}`,
-    lastPurchaseDate: toISODate(45 + i * 7),
-    ownerType: 'other' as const,
-    retentionLimit: 75
-  }))
-];
-
 export default function App() {
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -111,7 +63,7 @@ export default function App() {
         retentionLimit: c.retention_limit,
         ownerType: c.owner_type
       }));
-      setCustomers(mapped.length > 0 ? mapped : INITIAL_DATA);
+      setCustomers(mapped);
     } catch (err) {
       console.error('Erro ao carregar clientes:', err);
       showToast("Erro ao carregar dados do servidor.");
