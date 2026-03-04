@@ -36,6 +36,7 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusQuickFilter, setStatusQuickFilter] = useState<'all' | 'active' | 'risk' | 'prospecting'>('all');
 
   // Check if security is set up on mount and listen for Supabase Auth
   useEffect(() => {
@@ -217,6 +218,21 @@ export default function App() {
     return b.lastPurchaseDate.localeCompare(a.lastPurchaseDate);
   });
 
+  const uiFilteredCustomers = filteredCustomers.filter((customer) => {
+    if (statusQuickFilter === 'all') return true;
+    const statusData = getCustomerStatus(customer.lastPurchaseDate, customer.retentionLimit);
+    if (statusQuickFilter === 'active') return statusData.status === PortfolioStatus.ACTIVE;
+    if (statusQuickFilter === 'risk') return statusData.status === PortfolioStatus.AT_RISK;
+    return statusData.status === PortfolioStatus.PROSPECTING;
+  });
+
+  const uiSummary = {
+    total: filteredCustomers.length,
+    active: filteredCustomers.filter((c) => getCustomerStatus(c.lastPurchaseDate, c.retentionLimit).status === PortfolioStatus.ACTIVE).length,
+    risk: filteredCustomers.filter((c) => getCustomerStatus(c.lastPurchaseDate, c.retentionLimit).status === PortfolioStatus.AT_RISK).length,
+    prospecting: filteredCustomers.filter((c) => getCustomerStatus(c.lastPurchaseDate, c.retentionLimit).status === PortfolioStatus.PROSPECTING).length
+  };
+
   // Counts for badges (Own Customers)
   const riskCount = customers.filter(c => c.ownerType === 'me' && getCustomerStatus(c.lastPurchaseDate, c.retentionLimit).status === PortfolioStatus.AT_RISK).length;
   const prospectCount = customers.filter(c => c.ownerType === 'me' && getCustomerStatus(c.lastPurchaseDate, c.retentionLimit).status === PortfolioStatus.PROSPECTING).length;
@@ -239,7 +255,7 @@ export default function App() {
               </div>
 
               <div className="flex gap-2 lg:hidden">
-                <button onClick={() => setIsWhatsAppModalOpen(true)} className="p-2 text-green-600 hover:bg-green-50 rounded-full" title="Conexao WhatsApp">
+                <button onClick={() => setIsWhatsAppModalOpen(true)} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full" title="Conexao WhatsApp">
                   <MessageCircle className="w-5 h-5" />
                 </button>
                 <button onClick={() => setIsApiKeyModalOpen(true)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" title="Configurações">
@@ -271,11 +287,10 @@ export default function App() {
             <div className="flex gap-2 w-full lg:w-auto">
               <button
                 onClick={() => setIsWhatsAppModalOpen(true)}
-                className="hidden lg:flex items-center justify-center px-3 py-2 text-green-600 hover:bg-green-50 rounded-md transition-colors gap-2"
+                className="hidden lg:flex items-center justify-center px-3 py-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
                 title="Conectar WhatsApp"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">WhatsApp</span>
+                <MessageCircle className="w-5 h-5" />
               </button>
 
               <button
@@ -309,14 +324,14 @@ export default function App() {
 
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto md:overflow-visible">
           <nav className="-mb-px flex space-x-6 md:space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('portfolio')}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
                 ${activeTab === 'portfolio'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-blue-500 text-blue-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
               `}
             >
@@ -329,14 +344,14 @@ export default function App() {
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors relative
                 ${activeTab === 'risk'
-                  ? 'border-orange-500 text-orange-600'
+                  ? 'border-blue-500 text-blue-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
               `}
             >
               <AlertTriangle className="w-4 h-4" />
               Próximos de Sair
               {riskCount > 0 && (
-                <span className="ml-1 bg-orange-100 text-orange-600 py-0.5 px-2 rounded-full text-xs font-bold">
+                <span className="ml-1 bg-gray-100 text-gray-700 py-0.5 px-2 rounded-full text-xs font-bold">
                   {riskCount}
                 </span>
               )}
@@ -347,14 +362,14 @@ export default function App() {
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
                 ${activeTab === 'prospecting'
-                  ? 'border-red-500 text-red-600'
+                  ? 'border-blue-500 text-blue-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
               `}
             >
               <Archive className="w-4 h-4" />
               Prospecção
               {prospectCount > 0 && (
-                <span className="ml-1 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">
+                <span className="ml-1 bg-gray-100 text-gray-700 py-0.5 px-2 rounded-full text-xs font-bold">
                   {prospectCount}
                 </span>
               )}
@@ -367,14 +382,14 @@ export default function App() {
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
                 ${activeTab === 'monitoring'
-                  ? 'border-purple-500 text-purple-600'
+                  ? 'border-blue-500 text-blue-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
               `}
             >
               <Calendar className="w-4 h-4" />
               Acompanhamento
               {monitoringCount > 0 && (
-                <span className="ml-1 bg-purple-100 text-purple-600 py-0.5 px-2 rounded-full text-xs font-bold">
+                <span className="ml-1 bg-gray-100 text-gray-700 py-0.5 px-2 rounded-full text-xs font-bold">
                   {monitoringCount}
                 </span>
               )}
@@ -384,7 +399,7 @@ export default function App() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-4">
           <h2 className="text-lg font-medium text-gray-900">
             {activeTab === 'portfolio' && "Minha Carteira Ativa"}
@@ -400,8 +415,48 @@ export default function App() {
           </p>
         </div>
 
+        <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+            <p className="text-xs text-gray-500">Total</p>
+            <p className="text-lg font-semibold text-gray-900">{uiSummary.total}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+            <p className="text-xs text-gray-500">Ativos</p>
+            <p className="text-lg font-semibold text-green-700">{uiSummary.active}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+            <p className="text-xs text-gray-500">Em Risco</p>
+            <p className="text-lg font-semibold text-orange-700">{uiSummary.risk}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+            <p className="text-xs text-gray-500">Prospecção</p>
+            <p className="text-lg font-semibold text-red-700">{uiSummary.prospecting}</p>
+          </div>
+        </div>
+
+        <div className="mb-5 flex flex-wrap gap-2">
+          {[
+            { id: 'all', label: 'Todos' },
+            { id: 'active', label: 'Ativos' },
+            { id: 'risk', label: 'Em risco' },
+            { id: 'prospecting', label: 'Prospecção' }
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setStatusQuickFilter(item.id as 'all' | 'active' | 'risk' | 'prospecting')}
+              className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                statusQuickFilter === item.id
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
         <CustomerList
-          customers={filteredCustomers}
+          customers={uiFilteredCustomers}
           onRegisterPurchase={registerPurchase}
           onOpenMessage={(c) => setSelectedCustomerForMessage(c)}
           onEditCustomer={handleOpenEdit}
