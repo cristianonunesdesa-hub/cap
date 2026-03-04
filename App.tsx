@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Users, AlertTriangle, Archive, Plus, Check, Calendar, Download, Upload, Settings, LogOut } from './components/Icons';
+import { useState, useEffect } from 'react';
+import { Users, AlertTriangle, Archive, Plus, Check, Calendar, Settings, LogOut } from './components/Icons';
 import CustomerList from './components/CustomerList';
 import CustomerModal from './components/AddCustomerModal';
 import GenerateMessageModal from './components/GenerateMessageModal';
@@ -34,7 +34,6 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if security is set up on mount and listen for Supabase Auth
   useEffect(() => {
@@ -162,66 +161,6 @@ export default function App() {
     }
   };
 
-  // --- Export / Import Logic ---
-  const handleExport = () => {
-    // Export decrypted JSON for the user
-    const dataStr = JSON.stringify(customers, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const date = new Date().toISOString().split('T')[0];
-    link.href = url;
-    link.download = `carteira_clientes_${date}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast("Arquivo salvo nos Downloads!");
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string;
-        const parsed = JSON.parse(content);
-
-        if (Array.isArray(parsed)) {
-          // Basic validation to ensure it looks like customer data
-          const isValid = parsed.every(item => item.name && item.phone);
-          if (isValid) {
-            // Migration logic just in case
-            const migrated = parsed.map((c: any) => ({
-              ...c,
-              ownerType: c.ownerType || 'me'
-            }));
-            setCustomers(migrated);
-            showToast("Carteira carregada com sucesso!");
-          } else {
-            alert("O arquivo não parece conter dados válidos de clientes.");
-          }
-        } else {
-          alert("Formato de arquivo inválido.");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao ler o arquivo. Verifique se é um arquivo válido.");
-      }
-      // Reset input so we can select same file again if needed
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    };
-    reader.readAsText(file);
-  };
-  // -----------------------------
-
   // --- RENDER LOGIN SCREEN IF NOT AUTHENTICATED ---
   if (!isAuthenticated) {
     return (
@@ -283,15 +222,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Hidden File Input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        accept=".json,.txt"
-      />
-
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -349,23 +279,6 @@ export default function App() {
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Sair</span>
-              </button>
-
-              <button
-                onClick={handleExport}
-                className="hidden lg:flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                title="Salvar arquivo de backup manual"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Salvar
-              </button>
-              <button
-                onClick={handleImportClick}
-                className="hidden lg:flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                title="Carregar arquivo de backup"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Carregar
               </button>
 
               <button
