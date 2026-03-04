@@ -10,8 +10,6 @@ interface WhatsAppConnectionModalProps {
 type StatusTone = 'neutral' | 'success' | 'error';
 
 const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpen, onClose }) => {
-  const [evolutionBaseUrl, setEvolutionBaseUrl] = useState('');
-  const [evolutionApiKey, setEvolutionApiKey] = useState('');
   const [instanceName, setInstanceName] = useState('');
   const [messageTemplate, setMessageTemplate] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -60,7 +58,6 @@ const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpe
       const payload = await apiCall('/api/whatsapp/config');
       const config = payload?.config;
       if (config) {
-        setEvolutionBaseUrl(config.evolution_base_url || '');
         setInstanceName(config.instance_name || '');
         setMessageTemplate(config.message_template || '');
         setIsActive(config.is_active !== false);
@@ -77,14 +74,11 @@ const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpe
     setLoading(true);
     try {
       await apiCall('/api/whatsapp/config', 'PUT', {
-        evolutionBaseUrl,
-        evolutionApiKey,
-        instanceName,
         messageTemplate,
         isActive
       });
-      setEvolutionApiKey('');
-      setFeedback('Configuracao salva com sucesso.', 'success');
+      setFeedback('Preferencias salvas com sucesso.', 'success');
+      await loadConfig();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Erro ao salvar configuracao.', 'error');
     } finally {
@@ -175,37 +169,9 @@ const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpe
 
         <div className="p-6 overflow-y-auto space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">URL da Evolution</label>
-              <input
-                type="text"
-                value={evolutionBaseUrl}
-                onChange={(e) => setEvolutionBaseUrl(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                placeholder="http://localhost:8080"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Instancia</label>
-              <input
-                type="text"
-                value={instanceName}
-                onChange={(e) => setInstanceName(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                placeholder="vendedor_joao"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">API Key da Evolution</label>
-              <input
-                type="password"
-                value={evolutionApiKey}
-                onChange={(e) => setEvolutionApiKey(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                placeholder="Preencha apenas para definir/alterar"
-              />
+            <div className="md:col-span-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+              <p className="text-xs text-gray-500">Instancia deste vendedor</p>
+              <p className="text-sm font-medium text-gray-800">{instanceName || 'sera criada automaticamente'}</p>
             </div>
 
             <div className="md:col-span-2">
@@ -246,7 +212,7 @@ const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpe
               disabled={loading}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium"
             >
-              Salvar Configuracao
+              Salvar Preferencias
             </button>
             <button
               onClick={refreshStatus}
@@ -261,7 +227,7 @@ const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpe
               disabled={loading}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium"
             >
-              Criar Instancia e Gerar QR
+              Conectar e Gerar QR
             </button>
             <button
               onClick={refreshQrOnly}
@@ -285,7 +251,7 @@ const WhatsAppConnectionModal: React.FC<WhatsAppConnectionModalProps> = ({ isOpe
               <img src={qrCode} alt="QR Code WhatsApp" className="w-56 h-56 object-contain bg-white border rounded-md p-2" />
             ) : (
               <p className="text-sm text-gray-500">
-                Clique em "Criar Instancia e Gerar QR" para conectar o WhatsApp deste vendedor.
+                Clique em "Conectar e Gerar QR" para conectar seu WhatsApp.
               </p>
             )}
           </div>

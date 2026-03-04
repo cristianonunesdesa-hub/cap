@@ -1,8 +1,8 @@
 import {
+  ensureConnectionForUser,
   extractQrCode,
   getAuthenticatedUser,
   json,
-  requireConnectionForUser,
   tryEvolutionEndpoints
 } from './_common.js';
 
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const connection = await requireConnectionForUser(user.id);
+    const connection = await ensureConnectionForUser(user);
     const instanceName = connection.instance_name;
 
     await tryEvolutionEndpoints(connection, [

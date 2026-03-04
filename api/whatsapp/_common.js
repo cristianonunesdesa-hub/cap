@@ -51,6 +51,28 @@ export async function requireConnectionForUser(userId) {
   return data;
 }
 
+function sanitizePart(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 28);
+}
+
+export function buildInstanceName(user) {
+  const emailPart = sanitizePart(user?.email || '');
+  const idPart = sanitizePart(user?.id || '').slice(0, 8);
+  const base = emailPart || `seller_${idPart || 'default'}`;
+  return `${base}_${idPart || 'inst'}`.slice(0, 45);
+}
+
+export function getEvolutionDefaults() {
+  const evolutionBaseUrl = getEnv('EVOLUTION_BASE_URL');
+  const evolutionApiKey = getEnv('EVOLUTION_API_KEY');
+  return { evolutionBaseUrl, evolutionApiKey };
+}
+
 export async function upsertConnectionForUser(userId, payload) {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
@@ -73,6 +95,47 @@ export async function upsertConnectionForUser(userId, payload) {
     throw error;
   }
   return data;
+}
+
+export async function ensureConnectionForUser(user, overrides = {}) {
+  const supabase = getSupabaseAdmin();
+  const { data: current, error: currentError } = await supabase
+    .from('seller_whatsapp_connections')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (currentError) {
+    throw currentError;
+  }
+
+  const defaults = getEvolutionDefaults();
+  const evolutionBaseUrl =
+    overrides.evolution_base_url ||
+    current?.evolution_base_url ||
+    defaults.evolutionBaseUrl ||
+    '';
+  const evolutionApiKey =
+    overrides.evolution_api_key ||
+    current?.evolution_api_key ||
+    defaults.evolutionApiKey ||
+    '';
+  const instanceName =
+    overrides.instance_name ||
+    current?.instance_name ||
+    buildInstanceName(user);
+
+  if (!evolutionBaseUrl || !evolutionApiKey) {
+    throw new Error('Integração WhatsApp indisponível. Contate o administrador.');
+  }
+
+  return upsertConnectionForUser(user.id, {
+    evolution_base_url: evolutionBaseUrl,
+    evolution_api_key: evolutionApiKey,
+    instance_name: instanceName,
+    message_template: overrides.message_template ?? current?.message_template ?? null,
+    is_active: overrides.is_active ?? current?.is_active ?? true
+  });
 }
 
 export function extractQrCode(payload) {
