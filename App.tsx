@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Users, AlertTriangle, Archive, Plus, Check, Calendar, Settings, LogOut, MessageCircle } from './components/Icons';
+import { Users, AlertTriangle, Archive, Plus, Check, Calendar, LogOut, MessageCircle } from './components/Icons';
 import CustomerList from './components/CustomerList';
 import CustomerModal from './components/AddCustomerModal';
 import GenerateMessageModal from './components/GenerateMessageModal';
-import ApiKeyModal from './components/ApiKeyModal';
 import WhatsAppConnectionModal from './components/WhatsAppConnectionModal';
 import LoginScreen from './components/LoginScreen';
 import { Customer, TabView, PortfolioStatus } from './types';
@@ -29,7 +28,6 @@ export default function App() {
 
   // Modal States
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [selectedCustomerForMessage, setSelectedCustomerForMessage] = useState<Customer | null>(null);
@@ -258,9 +256,6 @@ export default function App() {
                 <button onClick={() => setIsWhatsAppModalOpen(true)} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full" title="Conexao WhatsApp">
                   <MessageCircle className="w-5 h-5" />
                 </button>
-                <button onClick={() => setIsApiKeyModalOpen(true)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" title="Configurações">
-                  <Settings className="w-5 h-5" />
-                </button>
                 <button onClick={handleLogout} className="p-2 text-red-500 hover:bg-red-50 rounded-full" title="Sair">
                   <LogOut className="w-5 h-5" />
                 </button>
@@ -294,11 +289,11 @@ export default function App() {
               </button>
 
               <button
-                onClick={() => setIsApiKeyModalOpen(true)}
-                className="hidden lg:flex items-center justify-center px-3 py-2 text-gray-500 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
-                title="Configurações e API Key"
+                onClick={handleOpenAdd}
+                className="flex-1 lg:flex-none flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <Settings className="w-5 h-5" />
+                <Plus className="w-5 h-5 mr-2" />
+                Novo Cliente
               </button>
 
               <button
@@ -308,14 +303,6 @@ export default function App() {
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Sair</span>
-              </button>
-
-              <button
-                onClick={handleOpenAdd}
-                className="flex-1 lg:flex-none flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Novo Cliente
               </button>
             </div>
           </div>
@@ -483,11 +470,6 @@ export default function App() {
         isOpen={!!selectedCustomerForMessage}
         customer={selectedCustomerForMessage}
         onClose={() => setSelectedCustomerForMessage(null)}
-      />
-
-      <ApiKeyModal
-        isOpen={isApiKeyModalOpen}
-        onClose={() => setIsApiKeyModalOpen(false)}
       />
 
       <WhatsAppConnectionModal
